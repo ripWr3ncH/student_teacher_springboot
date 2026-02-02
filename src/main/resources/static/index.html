@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>School Management System - EduNexus</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#6D5BBA",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#1E1B29",
+                        "card-dark": "#2D283E",
+                        "input-dark": "#3B364D"
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif
+        }
+        .bg-login-image {
+            background-image: linear-gradient(rgba(45, 40, 62, 0.4), rgba(45, 40, 62, 0.4)), url(https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800);
+            background-size: cover;
+            background-position: center
+        }
+        .dashboard-hidden { display: none !important; }
+        .login-hidden { display: none !important; }
+
+        /* Dashboard Styles */
+        .sidebar {
+            width: 280px;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex: 1;
+            min-height: 100vh;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #6D5BBA 0%, #8B7BC7 100%);
+            color: white;
+        }
+        .data-table th {
+            background: rgba(109, 91, 186, 0.1);
+        }
+        .data-table tr:hover {
+            background: rgba(109, 91, 186, 0.05);
+        }
+        .form-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .form-modal.hidden { display: none; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+
+    <!-- Theme Toggle -->
+    <button class="fixed top-4 right-4 p-2 rounded-full bg-white dark:bg-card-dark shadow-lg border border-slate-200 dark:border-slate-700 z-50" onclick="document.documentElement.classList.toggle('dark')">
+        <span class="material-symbols-outlined block dark:hidden">dark_mode</span>
+        <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+    </button>
+
+    <!-- LOGIN SECTION -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-6xl w-full bg-white dark:bg-card-dark rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px]">
+            <!-- Left Side - Image -->
+            <div class="md:w-1/2 relative bg-login-image p-12 flex flex-col justify-between overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 via-transparent to-transparent"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">S</div>
+                        <span class="text-white font-bold text-2xl tracking-tight">EduNexus</span>
+                    </div>
+                </div>
+                <div class="relative z-10 mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                        Empowering Education,<br/>Managing Success
+                    </h1>
+                    <p class="text-slate-200 text-lg max-w-sm">
+                        The complete digital ecosystem for modern educational institutions.
+                    </p>
+                    <div class="flex mt-8 space-x-2">
+                        <span class="w-8 h-1 bg-white rounded-full"></span>
+                        <span class="w-4 h-1 bg-white/40 rounded-full"></span>
+                        <span class="w-4 h-1 bg-white/40 rounded-full"></span>
+                    </div>
+                </div>
+                <div class="relative z-10 flex items-center text-white/80 text-sm">
+                    <span class="material-symbols-outlined text-sm mr-2">arrow_back</span>
+                    <a class="hover:underline" href="#">Back to website</a>
+                </div>
+            </div>
+
+            <!-- Right Side - Login Form -->
+            <div class="md:w-1/2 p-8 md:p-16 flex flex-col justify-center">
+                <div class="max-w-md w-full mx-auto">
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Login</h2>
+                            <span id="loginStatus" class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>
+                                Not logged in
+                            </span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400">Welcome back! Please enter your details.</p>
+                    </div>
+
+                    <form id="loginForm" class="space-y-5" onsubmit="loginWithCredentials(event)">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" for="username">Username</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                    <span class="material-symbols-outlined text-xl">person</span>
+                                </span>
+                                <input class="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-input-dark border-slate-200 dark:border-transparent rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white placeholder-slate-400 transition-all outline-none" id="username" name="username" placeholder="Enter your username" type="text" required autocomplete="username"/>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300" for="password">Password</label>
+                                <a class="text-sm font-medium text-primary hover:underline" href="#">Forgot?</a>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                    <span class="material-symbols-outlined text-xl">lock</span>
+                                </span>
+                                <input class="block w-full pl-11 pr-11 py-3 bg-slate-50 dark:bg-input-dark border-slate-200 dark:border-transparent rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white placeholder-slate-400 transition-all outline-none" id="password" name="password" placeholder="••••••••" type="password" required autocomplete="current-password"/>
+                                <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" type="button" onclick="togglePassword()">
+                                    <span id="passwordToggleIcon" class="material-symbols-outlined text-xl">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input class="h-4 w-4 text-primary focus:ring-primary border-slate-300 dark:border-slate-600 rounded bg-transparent" id="remember" name="remember" type="checkbox"/>
+                            <label class="ml-2 block text-sm text-slate-700 dark:text-slate-300" for="remember">
+                                Remember me for 30 days
+                            </label>
+                        </div>
+
+                        <div id="loginError" class="hidden p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm"></div>
+
+                        <button class="w-full bg-primary hover:bg-opacity-90 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center space-x-2" type="submit">
+                            <span>Sign in to Dashboard</span>
+                            <span class="material-symbols-outlined text-lg">login</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-10 pt-8 border-t border-slate-100 dark:border-slate-700/50">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4 flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-1">info</span>
+                            Test Credentials
+                        </p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/30 cursor-pointer hover:border-primary transition-all" onclick="fillCredentials('admin', 'adminpass')">
+                                <span class="block text-[10px] font-bold text-primary mb-1 uppercase tracking-tighter">Admin Account</span>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 flex justify-between">
+                                    <span>User: <span class="text-slate-900 dark:text-white font-mono">admin</span></span>
+                                </p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 flex justify-between">
+                                    <span>Pass: <span class="text-slate-900 dark:text-white font-mono">adminpass</span></span>
+                                </p>
+                            </div>
+                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/30 cursor-pointer hover:border-primary transition-all" onclick="fillCredentials('user', 'userpass')">
+                                <span class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">Student Account</span>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 flex justify-between">
+                                    <span>User: <span class="text-slate-900 dark:text-white font-mono">user</span></span>
+                                </p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 flex justify-between">
+                                    <span>Pass: <span class="text-slate-900 dark:text-white font-mono">userpass</span></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                        Don't have an account? <a class="font-semibold text-primary hover:underline" href="#">Contact Administrator</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboardSection" class="dashboard-hidden">
+        <div class="flex">
+            <!-- Sidebar -->
+            <div class="sidebar bg-white dark:bg-card-dark border-r border-slate-200 dark:border-slate-700/50 p-6 flex flex-col">
+                <div class="flex items-center space-x-2 mb-10">
+                    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">S</div>
+                    <span class="font-bold text-xl tracking-tight">EduNexus</span>
+                </div>
+
+                <nav class="space-y-2 flex-1">
+                    <button onclick="showTab('teachers')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active" data-tab="teachers">
+                        <span class="material-symbols-outlined">school</span>
+                        <span>Teachers</span>
+                    </button>
+                    <button onclick="showTab('students')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" data-tab="students">
+                        <span class="material-symbols-outlined">groups</span>
+                        <span>Students</span>
+                    </button>
+                    <button onclick="showTab('courses')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" data-tab="courses">
+                        <span class="material-symbols-outlined">menu_book</span>
+                        <span>Courses</span>
+                    </button>
+                </nav>
+
+                <div class="pt-6 border-t border-slate-200 dark:border-slate-700/50">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary">person</span>
+                        </div>
+                        <div>
+                            <p id="currentUser" class="font-medium text-sm">Admin User</p>
+                            <p class="text-xs text-slate-500">Administrator</p>
+                        </div>
+                    </div>
+                    <button id="logoutBtn" onclick="logout()" class="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all">
+                        <span class="material-symbols-outlined text-lg">logout</span>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content p-8">
+                <!-- Teachers Tab -->
+                <div id="teachersTab" class="tab-content">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold">Teachers</h1>
+                            <p class="text-slate-500 dark:text-slate-400">Manage teacher records</p>
+                        </div>
+                        <button onclick="showAddTeacherForm()" id="addTeacherBtn" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20">
+                            <span class="material-symbols-outlined">add</span>
+                            <span>Add Teacher</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                        <div id="teachersList" class="divide-y divide-slate-200 dark:divide-slate-700/50"></div>
+                    </div>
+                </div>
+
+                <!-- Students Tab -->
+                <div id="studentsTab" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold">Students</h1>
+                            <p class="text-slate-500 dark:text-slate-400">Manage student records</p>
+                        </div>
+                        <button onclick="showAddStudentForm()" id="addStudentBtn" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20">
+                            <span class="material-symbols-outlined">add</span>
+                            <span>Add Student</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                        <div id="studentsList" class="divide-y divide-slate-200 dark:divide-slate-700/50"></div>
+                    </div>
+                </div>
+
+                <!-- Courses Tab -->
+                <div id="coursesTab" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold">Courses</h1>
+                            <p class="text-slate-500 dark:text-slate-400">Manage course records</p>
+                        </div>
+                        <button onclick="showAddCourseForm()" id="addCourseBtn" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20">
+                            <span class="material-symbols-outlined">add</span>
+                            <span>Add Course</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                        <div id="coursesList" class="divide-y divide-slate-200 dark:divide-slate-700/50"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div id="addTeacherModal" class="form-modal hidden">
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Add New Teacher</h3>
+                <button onclick="hideAddTeacherForm()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form onsubmit="addTeacher(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Name</label>
+                    <input type="text" id="teacherName" placeholder="Enter name" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="teacherEmail" placeholder="Enter email" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Department</label>
+                    <input type="text" id="teacherDepartment" placeholder="Enter department" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-xl hover:bg-opacity-90 transition-all">Save</button>
+                    <button type="button" onclick="hideAddTeacherForm()" class="flex-1 bg-slate-100 dark:bg-slate-700 py-3 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="form-modal hidden">
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Add New Student</h3>
+                <button onclick="hideAddStudentForm()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form onsubmit="addStudent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Name</label>
+                    <input type="text" id="studentName" placeholder="Enter name" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="studentEmail" placeholder="Enter email" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Student ID</label>
+                    <input type="text" id="studentId" placeholder="Enter student ID" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Advisor (Teacher)</label>
+                    <select id="studentTeacher" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none">
+                        <option value="">Select Teacher</option>
+                    </select>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-xl hover:bg-opacity-90 transition-all">Save</button>
+                    <button type="button" onclick="hideAddStudentForm()" class="flex-1 bg-slate-100 dark:bg-slate-700 py-3 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Course Modal -->
+    <div id="addCourseModal" class="form-modal hidden">
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Add New Course</h3>
+                <button onclick="hideAddCourseForm()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form onsubmit="addCourse(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Course Title</label>
+                    <input type="text" id="courseTitle" placeholder="Enter course title" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Course Code</label>
+                    <input type="text" id="courseCode" placeholder="Enter course code" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Credits</label>
+                    <input type="number" id="courseCredits" placeholder="Enter credits" required min="1" max="6" class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Instructor (Teacher)</label>
+                    <select id="courseTeacher" required class="w-full px-4 py-3 bg-slate-50 dark:bg-input-dark rounded-xl border-0 focus:ring-2 focus:ring-primary outline-none">
+                        <option value="">Select Teacher</option>
+                    </select>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-xl hover:bg-opacity-90 transition-all">Save</button>
+                    <button type="button" onclick="hideAddCourseForm()" class="flex-1 bg-slate-100 dark:bg-slate-700 py-3 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Message -->
+    <div id="message" class="fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
