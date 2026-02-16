@@ -1,4 +1,4 @@
-name: Spring Boot Application CI/CD with PostgreSQL
+name: Spring Boot Application CI/CD
 
 on:
   # Trigger on pull requests to main branch
@@ -12,25 +12,8 @@ on:
 
 jobs:
   test:
-    name: Run Tests with PostgreSQL
+    name: Run Tests with H2
     runs-on: ubuntu-latest
-
-    # PostgreSQL service for integration tests
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: schooldb
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: kindaodd
-        ports:
-          - 5432:5432
-        # Wait until postgres is ready before starting the job
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     strategy:
       matrix:
@@ -55,13 +38,8 @@ jobs:
     - name: 🧹 Clean and Compile
       run: mvn clean compile
 
-    - name: 🧪 Run Tests with PostgreSQL
-      run: mvn test
-      env:
-        # Override properties so Spring connects to the GitHub PostgreSQL service
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/schooldb
-        SPRING_DATASOURCE_USERNAME: postgres
-        SPRING_DATASOURCE_PASSWORD: kindaodd
+    - name: 🧪 Run Tests with H2 Database
+      run: mvn test -Dspring.profiles.active=test
 
     - name: 📦 Package Application
       run: mvn package -DskipTests
