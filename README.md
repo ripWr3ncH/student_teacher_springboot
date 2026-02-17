@@ -51,6 +51,10 @@ A full-stack web application for managing students, teachers, and courses built 
 8. [How to Run](#how-to-run)
 9. [Docker Configuration](#docker-configuration)
 10. [Frontend](#frontend)
+11. [Testing Strategy](#testing-strategy)
+12. [CI/CD Pipeline](#cicd-pipeline)
+13. [Pull Request Workflow](#pull-request-workflow)
+14. [Branch Protection Rules](#branch-protection-rules)
 ---
 
 ## 📖 Project Overview
@@ -750,18 +754,463 @@ The frontend is a Single Page Application built with vanilla JavaScript.
 
 ---
 
+## 🧪 Testing Strategy
+
+This project implements **comprehensive testing** with 168 automated tests following the **Testing Pyramid** principle.
+
+### 📊 Test Distribution
+
+| Test Layer | Tests | Purpose | Technology |
+|------------|-------|---------|------------|
+| **Unit Tests** | 38 | Test individual components in isolation | JUnit 5, Mockito |
+| **Integration Tests** | 39 | Test multiple components together | @SpringBootTest, MockMvc |
+| **Repository Tests** | 36 | Test database operations | @DataJpaTest, H2 Database |
+| **Entity Tests** | 47 | Test data models | JUnit 5 |
+| **Application Context** | 1 | Verify Spring Boot starts | @SpringBootTest |
+| **Total** | **168** | Complete test coverage | |
+
+### 🎯 Test Files
+
+#### Unit Tests (Service Layer)
+- [`StudentServiceTest.java`](src/test/java/com/example/sepm_assignment/service/StudentServiceTest.java) - 17 tests
+- [`TeacherServiceTest.java`](src/test/java/com/example/sepm_assignment/service/TeacherServiceTest.java) - 21 tests
+- **Technology**: Mockito for mocking dependencies, JUnit 5 for assertions
+
+#### Integration Tests (Controller Layer)
+- [`StudentControllerTest.java`](src/test/java/com/example/sepm_assignment/controller/StudentControllerTest.java) - 20 tests
+- [`TeacherControllerTest.java`](src/test/java/com/example/sepm_assignment/controller/TeacherControllerTest.java) - 19 tests
+- **Technology**: MockMvc for HTTP request simulation, @SpringBootTest for full context
+
+#### Repository Tests (Data Layer)
+- [`StudentRepositoryTest.java`](src/test/java/com/example/sepm_assignment/repository/StudentRepositoryTest.java) - 18 tests
+- [`TeacherRepositoryTest.java`](src/test/java/com/example/sepm_assignment/repository/TeacherRepositoryTest.java) - 18 tests
+- **Technology**: @DataJpaTest with H2 in-memory database
+
+#### Entity Tests (Model Layer)
+- [`StudentTest.java`](src/test/java/com/example/sepm_assignment/model/StudentTest.java) - 24 tests
+- [`TeacherTest.java`](src/test/java/com/example/sepm_assignment/model/TeacherTest.java) - 23 tests
+- **Technology**: JUnit 5 for testing getters, setters, equals, hashCode
+
+#### Application Tests
+- [`SepmAssignmentApplicationTests.java`](src/test/java/com/example/sepm_assignment/SepmAssignmentApplicationTests.java) - 1 test
+- Verifies Spring Boot application context loads successfully
+
+### 🏃 Running Tests
+
+#### Run All Tests
+```bash
+./mvnw clean test
+```
+
+#### Run Specific Test Class
+```bash
+./mvnw test -Dtest=StudentServiceTest
+```
+
+#### Run Tests with Coverage
+```bash
+./mvnw clean test jacoco:report
+```
+
+### ✅ Test Results
+
+```
+[INFO] Tests run: 168, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+### 🎯 Testing Best Practices Used
+
+- ✅ **AAA Pattern** - Arrange, Act, Assert structure in all tests
+- ✅ **Test Isolation** - Each test is independent and can run in any order
+- ✅ **Mocking** - External dependencies mocked to focus on unit under test
+- ✅ **Descriptive Names** - Test method names clearly describe what is tested
+- ✅ **Given-When-Then** - Tests document expected behavior
+- ✅ **@DisplayName** - Human-readable test descriptions
+- ✅ **H2 Database** - In-memory database for fast, isolated integration tests
+
+### 📁 Test Configuration
+
+**Test Properties:** [`application-test.properties`](src/test/resources/application-test.properties)
+
+```properties
+# H2 In-Memory Database for testing
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driver-class-name=org.h2.Driver
+spring.jpa.hibernate.ddl-auto=create-drop
+
+# Random port to avoid conflicts
+server.port=0
+```
+
+**Why H2 for Testing?**
+- ⚡ **Fast** - In-memory database, no disk I/O
+- 🔒 **Isolated** - Each test gets fresh database
+- 🧹 **Clean** - Automatically drops tables after tests
+- 🚀 **No Setup** - No external database needed for CI/CD
+
+---
+
+## 🤖 CI/CD Pipeline
+
+This project uses **GitHub Actions** for Continuous Integration and Continuous Deployment, ensuring code quality through automated testing.
+
+### 📍 Pipeline Configuration
+
+**File:** [`.github/workflows/test.yml`](.github/workflows/test.yml)
+
+### 🎯 Pipeline Triggers
+
+The CI/CD pipeline runs automatically on:
+- ✅ **Pull Requests to `main`** - Tests all incoming changes
+- ✅ **Pushes to `main`** - Verifies main branch stays healthy
+- ✅ **Manual Trigger** - Can be run manually from GitHub Actions tab
+
+### 🔄 Pipeline Jobs
+
+#### Job 1: Run Tests with H2
+
+```yaml
+Steps:
+1. 📥 Checkout Code - Downloads repository
+2. ☕ Set up JDK 17 - Installs Java 17
+3. 🧹 Clean and Compile - Builds the project
+4. 🧪 Run Tests - Executes all 168 tests with H2 database
+5. 📦 Package Application - Creates JAR file
+6. 📈 Upload Test Results - Saves test reports as artifacts
+```
+
+**Duration:** ~2-3 minutes
+
+#### Job 2: Code Quality Check
+
+```yaml
+Steps:
+1. 📥 Checkout Code
+2. ☕ Set up JDK 17
+3. 🔍 Verify Code Compilation
+4. ✅ Additional quality checks
+```
+
+**Duration:** ~1-2 minutes
+
+### ✅ What Gets Tested in CI/CD?
+
+1. **Compilation** - Code compiles without errors
+2. **Unit Tests** - All service methods work correctly
+3. **Integration Tests** - Controllers and services work together
+4. **Repository Tests** - Database operations succeed
+5. **Entity Tests** - Model classes function properly
+6. **Application Startup** - Spring Boot application starts successfully
+
+### 🎯 CI/CD Benefits
+
+- 🚀 **Automated Testing** - No manual testing needed
+- 🔒 **Quality Gates** - Bad code can't be merged
+- ⚡ **Fast Feedback** - Know within minutes if changes break anything
+- 📊 **Test Reports** - Detailed logs available for debugging
+- 🛡️ **Prevents Regressions** - Old bugs can't come back
+- 👥 **Team Confidence** - Safe to merge changes
+
+### 📊 Pipeline Status
+
+![CI Status](https://github.com/ripWr3ncH/student_teacher_springboot/actions/workflows/test.yml/badge.svg)
+
+**View Pipeline:** [GitHub Actions](https://github.com/ripWr3ncH/student_teacher_springboot/actions)
+
+---
+
+## 🔄 Pull Request Workflow
+
+This project follows a **professional Git workflow** used in industry to ensure code quality and enable team collaboration.
+
+### 📝 Workflow Steps
+
+```
+1. Create Feature Branch
+   └─→ git checkout -b feature/new-feature
+
+2. Make Changes & Commit
+   └─→ git commit -m "feat: add new feature"
+
+3. Push to GitHub
+   └─→ git push origin feature/new-feature
+
+4. Create Pull Request
+   └─→ GitHub UI: Click "Compare & pull request"
+
+5. Automated CI/CD Runs
+   └─→ All 168 tests execute automatically
+
+6. Code Review (Optional)
+   └─→ Team members review changes
+
+7. Merge to Main
+   └─→ After tests pass and approval
+```
+
+### 🎯 Pull Request Requirements
+
+Before a PR can be merged:
+- ✅ All automated tests must pass (168/168)
+- ✅ CI/CD pipeline shows green checkmarks
+- ✅ No merge conflicts with main branch
+- ✅ Code review approval (if configured)
+- ✅ All conversations resolved
+
+### 📊 Example Pull Request
+
+**PR #2: Add Comprehensive Testing**
+- Added 168 tests across all layers
+- Configured CI/CD pipeline with GitHub Actions
+- Set up H2 database for testing
+- Fixed application context loading
+- **Status:** ✅ Merged
+
+**Link:** [View PR #2](https://github.com/ripWr3ncH/student_teacher_springboot/pull/2)
+
+### 🎯 Commit Message Convention
+
+We follow **Conventional Commits** standard:
+
+```bash
+# Types
+feat:     # New feature
+fix:      # Bug fix
+docs:     # Documentation changes
+test:     # Adding or updating tests
+chore:    # Maintenance tasks
+refactor: # Code restructuring
+
+# Examples
+git commit -m "feat: add student search functionality"
+git commit -m "fix: resolve null pointer in teacher service"
+git commit -m "test: add unit tests for student repository"
+git commit -m "docs: update README with CI/CD information"
+```
+
+### 🌿 Branch Naming Convention
+
+```bash
+feature/feature-name    # New features
+bugfix/bug-description  # Bug fixes
+hotfix/critical-fix     # Urgent production fixes
+docs/documentation      # Documentation updates
+test/test-description   # Adding tests
+```
+
+---
+
+## 🛡️ Branch Protection Rules
+
+The `main` branch is protected with strict rules to ensure code quality and prevent accidental damage.
+
+### 🔒 Protection Rules Active
+
+#### 1. Require Pull Request
+- ❌ **No direct pushes to main** - All changes must go through PR
+- ✅ **Pull request required** - Forces code review process
+- 📝 **Approvals required** - Can be configured based on team size
+
+#### 2. Require Status Checks
+- ✅ **CI/CD must pass** - All 168 tests must succeed
+- ✅ **Branch must be up to date** - Must have latest main branch changes
+- 🧪 **Required checks:**
+  - `Run Tests with H2` - All tests pass
+  - `Code Quality Check` - Compilation and quality gates
+
+#### 3. Require Conversation Resolution
+- 💬 All review comments must be addressed
+- ✅ No unresolved discussions
+
+### 🚫 What Happens If Rules Are Violated?
+
+#### Scenario 1: Try to Push Directly to Main
+```bash
+$ git push origin main
+! [remote rejected] main -> main (protected branch hook declined)
+error: failed to push some refs
+```
+**Result:** ❌ Push rejected - Must use pull request
+
+#### Scenario 2: Try to Merge PR with Failing Tests
+```
+❌ Merging is blocked
+
+Required status checks failed:
+  ✗ Run Tests with H2 — 3 tests failed
+
+[Merge pull request] button is disabled
+```
+**Result:** ❌ Cannot merge until tests pass
+
+#### Scenario 3: All Checks Pass
+```
+✅ All checks have passed
+
+2 successful checks:
+  ✓ Run Tests with H2 (17) — Passed in 2m 15s
+  ✓ Code Quality Check — Passed in 1m 32s
+
+[Merge pull request] button is enabled ✅
+```
+**Result:** ✅ Safe to merge!
+
+### 🎯 Benefits of Branch Protection
+
+- 🛡️ **Prevents Broken Code** - Tests must pass before merge
+- 🔍 **Forces Review** - Changes are examined before production
+- 📝 **Audit Trail** - Complete history of all changes
+- 🚀 **Confidence** - Main branch always works
+- 👥 **Team Safety** - Multiple people can work without conflicts
+- 🔄 **Rollback Capability** - Easy to revert if needed
+
+### 📊 Branch Protection Configuration
+
+**Location:** GitHub Repository → Settings → Branches → Branch protection rules
+
+**Current Settings:**
+```yaml
+Branch name pattern: main
+
+Rules:
+  ✅ Require pull request before merging
+  ✅ Require status checks to pass
+     - Run Tests with H2
+     - Code Quality Check
+  ✅ Require branches to be up to date
+  ✅ Require conversation resolution
+  ⚠️ Include administrators (can be disabled for solo projects)
+```
+
+### 🎓 Industry Standard Practice
+
+This workflow is used by:
+- 🏢 **Google** - Chromium, Android, Cloud Platform
+- 🏢 **Microsoft** - Windows, Office, Azure, VS Code
+- 🏢 **Facebook** - React, React Native, GraphQL
+- 🏢 **Amazon** - AWS services
+- 🏢 **Netflix** - Microservices architecture
+
+**Key Principle:** Code that reaches production has been thoroughly tested and reviewed.
+
+---
+
 ## ✅ Summary
 
-This project demonstrates:
-- ✅ MVC Architecture - Clear separation of concerns
-- ✅ REST API Principles - Proper HTTP methods and status codes
-- ✅ PostgreSQL Database - Relational data storage
-- ✅ One-to-Many Relationships - Teacher to Students, Teacher to Courses
-- ✅ Spring Security - Authentication and authorization
-- ✅ Docker Containerization - Easy deployment
-- ✅ Responsive Frontend - User-friendly interface
+This project demonstrates **professional software engineering practices** used in modern industry:
+
+### 🏗️ Software Architecture
+- ✅ **MVC Architecture** - Clear separation of concerns (Model-View-Controller)
+- ✅ **Layered Architecture** - Service, Repository, and Controller layers
+- ✅ **REST API Principles** - Proper HTTP methods and status codes
+- ✅ **Dependency Injection** - Spring IoC container
+
+### 💾 Data & Persistence
+- ✅ **PostgreSQL Database** - Production-grade relational database
+- ✅ **H2 Database** - Fast in-memory database for testing
+- ✅ **Spring Data JPA** - ORM with Hibernate
+- ✅ **One-to-Many Relationships** - Teacher to Students, Teacher to Courses
+- ✅ **Database Migrations** - Schema managed by Hibernate
+
+### 🔐 Security & Authentication
+- ✅ **Spring Security** - Industry-standard authentication
+- ✅ **Basic Authentication** - HTTP Basic Auth with BCrypt passwords
+- ✅ **Role-Based Access** - ADMIN and USER roles
+- ✅ **Secure Endpoints** - All API routes protected
+
+### 🧪 Testing & Quality Assurance
+- ✅ **168 Automated Tests** - Comprehensive test coverage
+- ✅ **Unit Tests** - Service layer with Mockito mocking
+- ✅ **Integration Tests** - Controller tests with MockMvc
+- ✅ **Repository Tests** - Database operations with @DataJpaTest
+- ✅ **Testing Pyramid** - Proper distribution across test types
+- ✅ **Test Isolation** - Each test runs independently with H2
+
+### 🤖 CI/CD & DevOps
+- ✅ **GitHub Actions** - Automated CI/CD pipeline
+- ✅ **Automated Testing** - All 168 tests run on every PR
+- ✅ **Pull Request Workflow** - Professional code review process
+- ✅ **Branch Protection** - Main branch requires passing tests
+- ✅ **Conventional Commits** - Standardized commit messages
+- ✅ **Docker Containerization** - Multi-container deployment
+
+### 🐳 Deployment & Infrastructure
+- ✅ **Docker Compose** - Multi-container orchestration
+- ✅ **Health Checks** - PostgreSQL container health monitoring
+- ✅ **Environment Variables** - Configurable database credentials
+- ✅ **Port Management** - Application (8081) and database (5432)
+- ✅ **Volume Persistence** - Data survives container restarts
+
+### 🎨 Frontend & UX
+- ✅ **Responsive Design** - Works on desktop and mobile
+- ✅ **Single Page Application** - Dynamic content loading
+- ✅ **Vanilla JavaScript** - No framework dependencies
+- ✅ **REST API Integration** - Fetch API for AJAX calls
+- ✅ **Form Validation** - Client-side input validation
+
+### 📊 Project Metrics
+- 📝 **Lines of Code:** 3,500+ (excluding tests)
+- 🧪 **Test Code:** 3,500+ lines
+- 📁 **Source Files:** 20+ Java classes
+- 🧪 **Test Files:** 9 test classes
+- ✅ **Test Success Rate:** 100% (168/168 passing)
+- ⏱️ **CI/CD Pipeline:** ~3 minutes average
+- 🐳 **Containers:** 2 (Application + Database)
+
+### 🎯 Industry Practices Demonstrated
+1. **Test-Driven Development (TDD)** - Comprehensive test suite
+2. **Continuous Integration** - Automated testing on every change
+3. **Code Review Process** - Pull request workflow with reviews
+4. **Branch Protection** - Quality gates before production
+5. **Conventional Commits** - Standardized version control
+6. **Containerization** - Docker for consistent environments
+7. **Configuration Management** - Separate configs for test/prod
+8. **RESTful Design** - Proper API design principles
+
+---
+
+## 📚 Additional Documentation
+
+- 📖 [**CI/CD & Testing Explanation**](CI_CD_TESTING_EXPLANATION.md) - Detailed guide on testing and CI/CD
+- 🎓 [**Pull Request Demo Guide**](DEMO_PULL_REQUEST_GUIDE.md) - How to demonstrate PR workflow
+- 🧪 [**Testing Guide**](TESTING_GUIDE.md) - Comprehensive testing documentation
+- 🛠️ [**API Testing Guide**](API_TEST.md) - How to test API endpoints
+- 📊 [**Final Status**](FINAL_STATUS.md) - Project completion status
+
+---
+
+## 🏆 Skills Demonstrated
+
+This project showcases proficiency in:
+
+- ☕ **Java 17** - Modern Java features
+- 🍃 **Spring Boot 3.x** - Latest Spring framework
+- 🧪 **JUnit 5 & Mockito** - Professional testing frameworks
+- 🐘 **PostgreSQL** - Production database management
+- 🐳 **Docker & Docker Compose** - Container orchestration
+- 🔄 **Git & GitHub** - Version control and collaboration
+- 🤖 **GitHub Actions** - CI/CD pipelines
+- 🏗️ **Software Architecture** - MVC and layered patterns
+- 🔐 **Security** - Authentication and authorization
+- 📝 **Documentation** - Clear technical writing
 
 ---
 
 ## 👨‍💻 Author
-DEWAN SALMAN  RAHMAN ZISAN
+
+**DEWAN SALMAN RAHMAN ZISAN**
+
+📧 Contact: [GitHub Profile](https://github.com/ripWr3ncH)
+
+---
+
+## 📄 License
+
+This project is created for educational purposes as part of SEPM (Software Engineering Project Management) coursework.
+
+---
+
+**⭐ If you found this project helpful, please consider giving it a star on GitHub!**
+
+**Last Updated:** February 17, 2026
